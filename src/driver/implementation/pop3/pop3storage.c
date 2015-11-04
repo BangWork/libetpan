@@ -405,6 +405,7 @@ static int pop3_mailstorage_connect(struct mailstorage * storage)
       pop3_storage->pop3_cache_directory,
       POP3DRIVER_CACHED_SET_FLAGS_DIRECTORY,
       pop3_storage->pop3_flags_directory,
+      NULL,
       &session);
   switch (r) {
   case MAIL_NO_ERROR_NON_AUTHENTICATED:

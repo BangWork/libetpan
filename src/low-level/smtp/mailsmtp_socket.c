@@ -57,17 +57,17 @@
 #define SERVICE_TYPE_TCP "tcp"
 
 static int mailsmtp_cfsocket_connect(mailsmtp * session,
-                                     const char * server, uint16_t port);
+                                     const char * server, uint16_t port, mailstream_config * config);
 
 int mailsmtp_socket_connect(mailsmtp * session,
-    const char * server, uint16_t port)
+    const char * server, uint16_t port, mailstream_config * config)
 {
   int s;
   mailstream * stream;
 
 #if HAVE_CFNETWORK
   if (mailstream_cfstream_enabled) {
-    return mailsmtp_cfsocket_connect(session, server, port);
+    return mailsmtp_cfsocket_connect(session, server, port, config);
   }
 #endif
   
@@ -98,13 +98,13 @@ int mailsmtp_socket_connect(mailsmtp * session,
 
 static int mailsmtp_cfsocket_starttls(mailsmtp * session);
 
-int mailsmtp_socket_starttls(mailsmtp * session)
+int mailsmtp_socket_starttls(mailsmtp * session, mailstream_config * config)
 {
-  return mailsmtp_socket_starttls_with_callback(session, NULL, NULL);
+  return mailsmtp_socket_starttls_with_callback(session, NULL, NULL, config);
 }
 
 int mailsmtp_socket_starttls_with_callback(mailsmtp * session,
-    void (* callback)(struct mailstream_ssl_context * ssl_context, void * data), void * data)
+    void (* callback)(struct mailstream_ssl_context * ssl_context, void * data), void * data, mailstream_config * config)
 {
   int r;
   int fd;
@@ -136,11 +136,11 @@ int mailsmtp_socket_starttls_with_callback(mailsmtp * session,
 }
 
 static int mailsmtp_cfsocket_connect(mailsmtp * session,
-                                     const char * server, uint16_t port)
+                                     const char * server, uint16_t port, mailstream_config * config)
 {
   mailstream * stream;
   
-  stream = mailstream_cfstream_open_timeout(server, port, session->smtp_timeout);
+  stream = mailstream_cfstream_open_timeout(server, port, session->smtp_timeout, config);
   if (stream == NULL) {
     return MAILSMTP_ERROR_CONNECTION_REFUSED;
   }

@@ -144,7 +144,8 @@ static int mailpop3_cfsocket_connect(mailpop3 * f, const char * server, uint16_t
 {
   mailstream * stream;
   
-  stream = mailstream_cfstream_open_timeout(server, port, f->pop3_timeout);
+  // TODO POP3 with proxy
+  stream = mailstream_cfstream_open_timeout(server, port, f->pop3_timeout, NULL);
   if (stream == NULL) {
     return MAILPOP3_ERROR_CONNECTION_REFUSED;
   }

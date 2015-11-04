@@ -57,17 +57,17 @@
 #define SERVICE_NAME_IMAP "imap2"
 #define SERVICE_TYPE_TCP "tcp"
 
-static int mailimap_cfsocket_connect_voip(mailimap * f, const char * server, uint16_t port, int voip_enabled);
+static int mailimap_cfsocket_connect_voip(mailimap * f, const char * server, uint16_t port, int voip_enabled, mailstream_config * config);
 
 LIBETPAN_EXPORT
-int mailimap_socket_connect_voip(mailimap * f, const char * server, uint16_t port, int voip_enabled)
+int mailimap_socket_connect_voip(mailimap * f, const char * server, uint16_t port, int voip_enabled, mailstream_config * config)
 {
     int s;
     mailstream * stream;
 
   #if HAVE_CFNETWORK
     if (mailstream_cfstream_enabled) {
-      return mailimap_cfsocket_connect_voip(f, server, port, voip_enabled);
+      return mailimap_cfsocket_connect_voip(f, server, port, voip_enabled, config);
     }
   #endif
 
@@ -97,9 +97,9 @@ int mailimap_socket_connect_voip(mailimap * f, const char * server, uint16_t por
 }
 
 LIBETPAN_EXPORT
-int mailimap_socket_connect(mailimap * f, const char * server, uint16_t port)
+int mailimap_socket_connect(mailimap * f, const char * server, uint16_t port, mailstream_config * config)
 {
-  return mailimap_socket_connect_voip(f, server, port, mailstream_cfstream_voip_enabled);
+  return mailimap_socket_connect_voip(f, server, port, mailstream_cfstream_voip_enabled, config);
 }
 
 
@@ -148,11 +148,11 @@ int mailimap_socket_starttls_with_callback(mailimap * f,
   return MAILIMAP_NO_ERROR;
 }
 
-static int mailimap_cfsocket_connect_voip(mailimap * f, const char * server, uint16_t port, int voip_enabled)
+static int mailimap_cfsocket_connect_voip(mailimap * f, const char * server, uint16_t port, int voip_enabled, mailstream_config * config)
 {
   mailstream * stream;
   
-  stream = mailstream_cfstream_open_voip_timeout(server, port, voip_enabled, f->imap_timeout);
+  stream = mailstream_cfstream_open_voip_timeout(server, port, voip_enabled, f->imap_timeout, config);
   if (stream == NULL) {
     return MAILIMAP_ERROR_CONNECTION_REFUSED;
   }

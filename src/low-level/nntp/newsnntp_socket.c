@@ -98,7 +98,7 @@ static int newsnntp_cfsocket_connect(newsnntp * f, const char * server, uint16_t
 {
   mailstream * stream;
   
-  stream = mailstream_cfstream_open_timeout(server, port, f->nntp_timeout);
+  stream = mailstream_cfstream_open_timeout(server, port, f->nntp_timeout, NULL);
   if (stream == NULL) {
     return NEWSNNTP_ERROR_STREAM;
   }

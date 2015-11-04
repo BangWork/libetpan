@@ -55,6 +55,11 @@ struct _mailstream_low;
 
 typedef struct _mailstream_low mailstream_low;
 
+// Additional stream setting
+struct _mailstream_config;
+
+typedef struct _mailstream_config mailstream_config;
+
 enum {
   /* Buffer is a log text string. */
   MAILSTREAM_LOG_TYPE_INFO_RECEIVED,
@@ -128,6 +133,12 @@ enum {
   MAILSTREAM_IDLE_HASDATA,
   MAILSTREAM_IDLE_TIMEOUT,
   MAILSTREAM_IDLE_CANCELLED
+};
+
+struct _mailstream_config {
+  int socks_proxy_enabled;
+  char * socks_proxy_host;
+  short socks_proxy_port;
 };
   
 #ifdef __cplusplus

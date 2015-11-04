@@ -107,7 +107,8 @@ static int mailpop3_cfssl_connect_ssl_level(mailpop3 * f, const char * server, u
   mailstream * stream;
   int r;
   
-  stream = mailstream_cfstream_open_timeout(server, port, f->pop3_timeout);
+  // TODO POP3 proxy
+  stream = mailstream_cfstream_open_timeout(server, port, f->pop3_timeout, NULL);
   if (stream == NULL) {
     return MAILPOP3_ERROR_CONNECTION_REFUSED;
   }

@@ -197,29 +197,29 @@ static void cfstream_data_close(struct mailstream_cfstream_data * cfstream_data)
 }
 #endif
 
-mailstream * mailstream_cfstream_open(const char * hostname, int16_t port)
+mailstream * mailstream_cfstream_open(const char * hostname, int16_t port, mailstream_config * config)
 {
-	return mailstream_cfstream_open_voip_timeout(hostname, port, 0, 0);
+	return mailstream_cfstream_open_voip_timeout(hostname, port, 0, 0, config);
 }
 
-mailstream * mailstream_cfstream_open_timeout(const char * hostname, int16_t port, time_t timeout)
+mailstream * mailstream_cfstream_open_timeout(const char * hostname, int16_t port, time_t timeout, mailstream_config * config)
 {
-	return mailstream_cfstream_open_voip_timeout(hostname, port, 0, timeout);
+	return mailstream_cfstream_open_voip_timeout(hostname, port, 0, timeout, config);
 }
 
-mailstream * mailstream_cfstream_open_voip(const char * hostname, int16_t port, int voip_enabled)
+mailstream * mailstream_cfstream_open_voip(const char * hostname, int16_t port, int voip_enabled, mailstream_config * config)
 {
-	return mailstream_cfstream_open_voip_timeout(hostname, port, voip_enabled, 0);
+	return mailstream_cfstream_open_voip_timeout(hostname, port, voip_enabled, 0, config);
 }
 
 mailstream * mailstream_cfstream_open_voip_timeout(const char * hostname, int16_t port, int voip_enabled,
-  time_t timeout)
+  time_t timeout, mailstream_config * config)
 {
 #if HAVE_CFNETWORK
   mailstream_low * low;
   mailstream * s;
   
-  low = mailstream_low_cfstream_open_voip_timeout(hostname, port, voip_enabled, timeout);
+  low = mailstream_low_cfstream_open_voip_timeout(hostname, port, voip_enabled, timeout, config);
   if (low == NULL) {
     return NULL;
   }
@@ -443,25 +443,25 @@ static void writeStreamCallback(CFWriteStreamRef stream, CFStreamEventType event
 }
 #endif
 
-mailstream_low * mailstream_low_cfstream_open(const char * hostname, int16_t port)
+mailstream_low * mailstream_low_cfstream_open(const char * hostname, int16_t port, mailstream_config * config)
 {
-    return mailstream_low_cfstream_open_voip_timeout(hostname, port, mailstream_cfstream_voip_enabled, 0);
+    return mailstream_low_cfstream_open_voip_timeout(hostname, port, mailstream_cfstream_voip_enabled, 0, config);
 }
 
 mailstream_low * mailstream_low_cfstream_open_timeout(const char * hostname, int16_t port,
-  time_t timeout)
+  time_t timeout, mailstream_config * config)
 {
 	return mailstream_low_cfstream_open_voip_timeout(hostname, port,
-	  mailstream_cfstream_voip_enabled, timeout);
+	  mailstream_cfstream_voip_enabled, timeout, config);
 }
 
-mailstream_low * mailstream_low_cfstream_open_voip(const char * hostname, int16_t port, int voip_enabled)
+mailstream_low * mailstream_low_cfstream_open_voip(const char * hostname, int16_t port, int voip_enabled, mailstream_config * config)
 {
-	return mailstream_low_cfstream_open_voip_timeout(hostname, port, voip_enabled, 0);
+	return mailstream_low_cfstream_open_voip_timeout(hostname, port, voip_enabled, 0, config);
 }
 
 mailstream_low * mailstream_low_cfstream_open_voip_timeout(const char * hostname, int16_t port,
-  int voip_enabled, time_t timeout)
+  int voip_enabled, time_t timeout, mailstream_config * config)
 {
 #if HAVE_CFNETWORK
   mailstream_low * s;
@@ -515,6 +515,24 @@ mailstream_low * mailstream_low_cfstream_open_voip_timeout(const char * hostname
   cfstream_data->cancelContext.info = s;
   cfstream_data->cancelContext.perform = cancelPerform;
   cfstream_data->cancelSource = CFRunLoopSourceCreate(NULL, 0, &cfstream_data->cancelContext);
+  
+  // Set socks proxy
+  if (config != NULL && config->socks_proxy_enabled > 0) {
+    CFMutableDictionaryRef settings;
+    settings = CFDictionaryCreateMutable(NULL, 0, &kCFTypeDictionaryKeyCallBacks, &kCFTypeDictionaryValueCallBacks);
+    
+    CFStringRef proxyHost = CFStringCreateWithCString(kCFAllocatorDefault, config->socks_proxy_host, kCFStringEncodingUTF8);
+    CFNumberRef proxyPort = CFNumberCreate(kCFAllocatorDefault, kCFNumberSInt16Type, &config->socks_proxy_port);
+    
+    CFDictionarySetValue(settings, kCFStreamPropertySOCKSProxyHost, proxyHost);
+    CFDictionarySetValue(settings, kCFStreamPropertySOCKSProxyPort, proxyPort);
+    CFReadStreamSetProperty(cfstream_data->readStream, kCFStreamPropertySOCKSProxy, settings);
+    CFWriteStreamSetProperty(cfstream_data->writeStream, kCFStreamPropertySOCKSProxy, settings);
+    
+    CFRelease(settings);
+    CFRelease(proxyHost);
+    CFRelease(proxyPort);
+  }
   
   r = low_open(s);
   if (r < 0) {

@@ -48,10 +48,10 @@ extern "C" {
 #include <libetpan/mailimap_types.h>
 
 LIBETPAN_EXPORT
-int mailimap_socket_connect_voip(mailimap * f, const char * server, uint16_t port, int voip_enabled);
+int mailimap_socket_connect_voip(mailimap * f, const char * server, uint16_t port, int voip_enabled, mailstream_config * config);
 
 LIBETPAN_EXPORT
-int mailimap_socket_connect(mailimap * f, const char * server, uint16_t port);
+int mailimap_socket_connect(mailimap * f, const char * server, uint16_t port, mailstream_config * config);
 
 LIBETPAN_EXPORT
 int mailimap_socket_starttls(mailimap * f);

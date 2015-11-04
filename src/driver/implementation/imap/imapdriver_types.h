@@ -89,13 +89,13 @@ struct imap_cached_session_state_data {
   imap_mailstorage is the state data specific to the IMAP4rev1 storage.
 
   - servername  this is the name of the IMAP4rev1 server
-  
+
   - port is the port to connect to, on the server.
     you give 0 to use the default port.
 
   - command, if non-NULL the command used to connect to the
     server instead of allowing normal TCP connections to be used.
-    
+
   - connection_type is the type of socket layer to use.
     The value can be CONNECTION_TYPE_PLAIN, CONNECTION_TYPE_STARTTLS,
     CONNECTION_TYPE_TRY_STARTTLS, CONNECTION_TYPE_TLS or
@@ -120,14 +120,14 @@ struct imap_mailstorage {
   uint16_t imap_port;
   char * imap_command;
   int imap_connection_type;
-  
+
   int imap_auth_type;
   char * imap_login; /* deprecated */
   char * imap_password; /* deprecated */
-  
+
   int imap_cached;
   char * imap_cache_directory;
-  
+
   struct {
     int sasl_enabled;
     char * sasl_auth_type;
@@ -139,7 +139,13 @@ struct imap_mailstorage {
     char * sasl_password;
     char * sasl_realm;
   } imap_sasl;
-  
+
+  struct {
+    int socks_proxy_enabled;
+    char * socks_proxy_host;
+    uint16_t socks_proxy_port;
+  } imap_proxy;
+
   char * imap_local_address;
   uint16_t imap_local_port;
 };

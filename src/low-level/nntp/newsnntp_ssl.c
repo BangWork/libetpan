@@ -106,7 +106,7 @@ static int newsnntp_cfssl_connect_ssl_level(newsnntp * f, const char * server, u
   mailstream * stream;
   int r;
   
-  stream = mailstream_cfstream_open_timeout(server, port, f->nntp_timeout);
+  stream = mailstream_cfstream_open_timeout(server, port, f->nntp_timeout, NULL);
   if (stream == NULL) {
     return NEWSNNTP_ERROR_CONNECTION_REFUSED;
   }

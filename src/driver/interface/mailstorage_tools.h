@@ -52,6 +52,7 @@ int mailstorage_generic_connect(mailsession_driver * driver,
     char * cache_directory,
     int flags_function_id,
     char * flags_directory,
+    mailstream_config * config,
     mailsession ** result);
 
 int mailstorage_generic_connect_with_local_address(mailsession_driver * driver,
@@ -65,6 +66,7 @@ int mailstorage_generic_connect_with_local_address(mailsession_driver * driver,
     char * cache_directory,
     int flags_function_id,
     char * flags_directory,
+    mailstream_config * config,
     mailsession ** result);
 
 int mailstorage_generic_auth(mailsession * session,

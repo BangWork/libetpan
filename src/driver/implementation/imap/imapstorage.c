@@ -72,7 +72,8 @@ int imap_mailstorage_init(struct mailstorage * storage,
     const char * imap_command,
     int imap_connection_type, int imap_auth_type,
     const char * imap_login, const char * imap_password,
-    int imap_cached, const char * imap_cache_directory)
+    int imap_cached, const char * imap_cache_directory,
+    int socks_proxy_enabled, const char* socks_proxy_host, uint16_t socks_proxy_port)
 {
   return imap_mailstorage_init_sasl(storage,
       imap_servername, imap_port,
@@ -83,7 +84,8 @@ int imap_mailstorage_init(struct mailstorage * storage,
       NULL, NULL,
       imap_login, imap_login,
       imap_password, NULL,
-      imap_cached, imap_cache_directory);
+      imap_cached, imap_cache_directory,
+      socks_proxy_enabled, socks_proxy_host, socks_proxy_port);
 }
 
 LIBETPAN_EXPORT
@@ -97,7 +99,8 @@ int imap_mailstorage_init_sasl(struct mailstorage * storage,
     const char * remote_ip_port,
     const char * login, const char * auth_name,
     const char * password, const char * realm,
-    int imap_cached, const char * imap_cache_directory)
+    int imap_cached, const char * imap_cache_directory,
+    int socks_proxy_enabled, const char* socks_proxy_host, uint16_t socks_proxy_port)
 {
   return imap_mailstorage_init_sasl_with_local_address(storage,
       imap_servername, imap_port,
@@ -110,7 +113,8 @@ int imap_mailstorage_init_sasl(struct mailstorage * storage,
       remote_ip_port,
       login, auth_name,
       password, realm,
-      imap_cached, imap_cache_directory);
+      imap_cached, imap_cache_directory,
+      socks_proxy_enabled, socks_proxy_host, socks_proxy_port);
 }
 
 LIBETPAN_EXPORT
@@ -125,7 +129,8 @@ int imap_mailstorage_init_sasl_with_local_address(struct mailstorage * storage,
     const char * remote_ip_port,
     const char * login, const char * auth_name,
     const char * password, const char * realm,
-    int imap_cached, const char * imap_cache_directory)
+    int imap_cached, const char * imap_cache_directory,
+    int socks_proxy_enabled, const char* socks_proxy_host, uint16_t socks_proxy_port)
 {
   struct imap_mailstorage * imap_storage;
 
@@ -152,6 +157,16 @@ int imap_mailstorage_init_sasl_with_local_address(struct mailstorage * storage,
   }
   
   imap_storage->imap_local_port = imap_local_port;
+  
+  // SOCKS proxy setting
+  if (socks_proxy_enabled > 0) {
+    imap_storage->imap_proxy.socks_proxy_host = strdup(socks_proxy_host);
+    if (imap_storage->imap_proxy.socks_proxy_host == NULL) {
+      goto free_socks_proxy_host;
+    }
+    imap_storage->imap_proxy.socks_proxy_port = socks_proxy_port;
+    imap_storage->imap_proxy.socks_proxy_enabled = socks_proxy_enabled;
+  }
 
   imap_storage->imap_connection_type = imap_connection_type;
   
@@ -286,6 +301,7 @@ int imap_mailstorage_init_sasl_with_local_address(struct mailstorage * storage,
     imap_storage->imap_password = NULL;
   }
   
+  
   storage->sto_data = imap_storage;
   storage->sto_driver = &imap_mailstorage_driver;
 
@@ -317,6 +333,8 @@ int imap_mailstorage_init_sasl_with_local_address(struct mailstorage * storage,
   free(imap_storage->imap_local_address);
  free_servername:
   free(imap_storage->imap_servername);
+ free_socks_proxy_host:
+  free(imap_storage->imap_proxy.socks_proxy_host);
  free:
   free(imap_storage);
  err:
@@ -346,6 +364,7 @@ static void imap_mailstorage_uninitialize(struct mailstorage * storage)
   free(imap_storage->imap_command);
   free(imap_storage->imap_local_address);
   free(imap_storage->imap_servername);
+  free(imap_storage->imap_proxy.socks_proxy_host);
   free(imap_storage);
   
   storage->sto_data = NULL;
@@ -367,6 +386,15 @@ static int imap_connect(struct mailstorage * storage,
   else
     driver = imap_session_driver;
   
+  mailstream_config * config = NULL;
+  if (imap_storage->imap_proxy.socks_proxy_enabled > 0) {
+    config = &(mailstream_config) {
+      .socks_proxy_enabled = imap_storage->imap_proxy.socks_proxy_enabled,
+      .socks_proxy_host = imap_storage->imap_proxy.socks_proxy_host,
+      .socks_proxy_port = imap_storage->imap_proxy.socks_proxy_port
+    };
+  }
+  
   r = mailstorage_generic_connect_with_local_address(driver,
       imap_storage->imap_servername,
       imap_storage->imap_port,
@@ -377,6 +405,7 @@ static int imap_connect(struct mailstorage * storage,
       IMAPDRIVER_CACHED_SET_CACHE_DIRECTORY,
       imap_storage->imap_cache_directory,
       0, NULL,
+      config,
       &session);
   switch (r) {
   case MAIL_NO_ERROR_NON_AUTHENTICATED:

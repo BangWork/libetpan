@@ -57,18 +57,18 @@
 #define SERVICE_TYPE_TCP "tcp"
 
 static int mailsmtp_cfssl_connect(mailsmtp * session,
-                                  const char * server, uint16_t port);
+                                  const char * server, uint16_t port, mailstream_config * config);
 
 int mailsmtp_ssl_connect(mailsmtp * session,
-    const char * server, uint16_t port)
+    const char * server, uint16_t port, mailstream_config * config)
 {
   return mailsmtp_ssl_connect_with_callback(session, server, port,
-      NULL, NULL);
+      NULL, NULL, config);
 }
 
 int mailsmtp_ssl_connect_with_callback(mailsmtp * session,
     const char * server, uint16_t port,
-    void (* callback)(struct mailstream_ssl_context * ssl_context, void * data), void * data)
+    void (* callback)(struct mailstream_ssl_context * ssl_context, void * data), void * data, mailstream_config * config)
 {
   int s;
   mailstream * stream;
@@ -76,7 +76,7 @@ int mailsmtp_ssl_connect_with_callback(mailsmtp * session,
 #if HAVE_CFNETWORK
   if (mailstream_cfstream_enabled) {
     if (callback == NULL) {
-      return mailsmtp_cfssl_connect(session, server, port);
+      return mailsmtp_cfssl_connect(session, server, port, config);
     }
   }
 #endif
@@ -107,12 +107,12 @@ int mailsmtp_ssl_connect_with_callback(mailsmtp * session,
 }
 
 static int mailsmtp_cfssl_connect_ssl_level(mailsmtp * session,
-                                            const char * server, uint16_t port, int ssl_level)
+                                            const char * server, uint16_t port, int ssl_level, mailstream_config * config)
 {
   mailstream * stream;
   int r;
   
-  stream = mailstream_cfstream_open_timeout(server, port, session->smtp_timeout);
+  stream = mailstream_cfstream_open_timeout(server, port, session->smtp_timeout, config);
   if (stream == NULL) {
     return MAILSMTP_ERROR_CONNECTION_REFUSED;
   }
@@ -128,7 +128,7 @@ static int mailsmtp_cfssl_connect_ssl_level(mailsmtp * session,
 }
 
 static int mailsmtp_cfssl_connect(mailsmtp * session,
-                                  const char * server, uint16_t port)
+                                  const char * server, uint16_t port, mailstream_config * config)
 {
-    return mailsmtp_cfssl_connect_ssl_level(session, server, port, MAILSTREAM_CFSTREAM_SSL_LEVEL_NEGOCIATED_SSL);
+    return mailsmtp_cfssl_connect_ssl_level(session, server, port, MAILSTREAM_CFSTREAM_SSL_LEVEL_NEGOCIATED_SSL, config);
 }

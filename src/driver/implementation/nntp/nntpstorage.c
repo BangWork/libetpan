@@ -267,6 +267,7 @@ static int nntp_mailstorage_connect(struct mailstorage * storage)
       nntp_storage->nntp_cache_directory,
       NNTPDRIVER_CACHED_SET_FLAGS_DIRECTORY,
       nntp_storage->nntp_flags_directory,
+      NULL,
       &session);
   switch (r) {
   case MAIL_NO_ERROR_NON_AUTHENTICATED:

@@ -188,6 +188,7 @@ int mailstorage_generic_connect(mailsession_driver * driver,
     char * cache_directory,
     int flags_function_id,
     char * flags_directory,
+    mailstream_config * config,
     mailsession ** result)
 {
   return mailstorage_generic_connect_with_local_address(driver,
@@ -201,6 +202,7 @@ int mailstorage_generic_connect(mailsession_driver * driver,
       cache_directory,
       flags_function_id,
       flags_directory,
+      config,
       result);
 }
 
@@ -215,6 +217,7 @@ int mailstorage_generic_connect_with_local_address(mailsession_driver * driver,
     char * cache_directory,
     int flags_function_id,
     char * flags_directory,
+    mailstream_config * config,
     mailsession ** result)
 {
   int r;
@@ -230,7 +233,7 @@ int mailstorage_generic_connect_with_local_address(mailsession_driver * driver,
   case CONNECTION_TYPE_TLS:
 #if HAVE_CFNETWORK
     if (mailstream_cfstream_enabled) {
-      stream = mailstream_cfstream_open_voip(servername, port, mailstream_cfstream_voip_enabled);
+      stream = mailstream_cfstream_open_voip(servername, port, mailstream_cfstream_voip_enabled, config);
       if (stream == NULL) {
         res = MAIL_ERROR_CONNECT;
         goto err;
