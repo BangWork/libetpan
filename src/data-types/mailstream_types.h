@@ -138,7 +138,9 @@ enum {
 struct _mailstream_config {
   int socks_proxy_enabled;
   char * socks_proxy_host;
-  short socks_proxy_port;
+  uint16_t socks_proxy_port;
+  char * socks_proxy_user;
+  char * socks_proxy_password;
 };
   
 #ifdef __cplusplus

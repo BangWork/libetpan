@@ -73,7 +73,8 @@ int imap_mailstorage_init(struct mailstorage * storage,
     int imap_connection_type, int imap_auth_type,
     const char * imap_login, const char * imap_password,
     int imap_cached, const char * imap_cache_directory,
-    int socks_proxy_enabled, const char* socks_proxy_host, uint16_t socks_proxy_port)
+    int socks_proxy_enabled, const char* socks_proxy_host, uint16_t socks_proxy_port,
+    const char* socks_proxy_user, const char* socks_proxy_password)
 {
   return imap_mailstorage_init_sasl(storage,
       imap_servername, imap_port,
@@ -85,7 +86,8 @@ int imap_mailstorage_init(struct mailstorage * storage,
       imap_login, imap_login,
       imap_password, NULL,
       imap_cached, imap_cache_directory,
-      socks_proxy_enabled, socks_proxy_host, socks_proxy_port);
+      socks_proxy_enabled, socks_proxy_host, socks_proxy_port,
+      socks_proxy_user, socks_proxy_password);
 }
 
 LIBETPAN_EXPORT
@@ -100,7 +102,8 @@ int imap_mailstorage_init_sasl(struct mailstorage * storage,
     const char * login, const char * auth_name,
     const char * password, const char * realm,
     int imap_cached, const char * imap_cache_directory,
-    int socks_proxy_enabled, const char* socks_proxy_host, uint16_t socks_proxy_port)
+    int socks_proxy_enabled, const char* socks_proxy_host, uint16_t socks_proxy_port,
+    const char* socks_proxy_user, const char* socks_proxy_password)
 {
   return imap_mailstorage_init_sasl_with_local_address(storage,
       imap_servername, imap_port,
@@ -114,7 +117,8 @@ int imap_mailstorage_init_sasl(struct mailstorage * storage,
       login, auth_name,
       password, realm,
       imap_cached, imap_cache_directory,
-      socks_proxy_enabled, socks_proxy_host, socks_proxy_port);
+      socks_proxy_enabled, socks_proxy_host, socks_proxy_port,
+      socks_proxy_user, socks_proxy_password);
 }
 
 LIBETPAN_EXPORT
@@ -130,7 +134,8 @@ int imap_mailstorage_init_sasl_with_local_address(struct mailstorage * storage,
     const char * login, const char * auth_name,
     const char * password, const char * realm,
     int imap_cached, const char * imap_cache_directory,
-    int socks_proxy_enabled, const char* socks_proxy_host, uint16_t socks_proxy_port)
+    int socks_proxy_enabled, const char* socks_proxy_host, uint16_t socks_proxy_port,
+    const char* socks_proxy_user, const char* socks_proxy_password)
 {
   struct imap_mailstorage * imap_storage;
 
@@ -162,10 +167,21 @@ int imap_mailstorage_init_sasl_with_local_address(struct mailstorage * storage,
   if (socks_proxy_enabled > 0) {
     imap_storage->imap_proxy.socks_proxy_host = strdup(socks_proxy_host);
     if (imap_storage->imap_proxy.socks_proxy_host == NULL) {
-      goto free_socks_proxy_host;
+      goto free_local_address;
     }
     imap_storage->imap_proxy.socks_proxy_port = socks_proxy_port;
     imap_storage->imap_proxy.socks_proxy_enabled = socks_proxy_enabled;
+    
+    if (socks_proxy_user != NULL) {
+      imap_storage->imap_proxy.socks_proxy_user = strdup(socks_proxy_user);
+      if (imap_storage->imap_proxy.socks_proxy_user == NULL) {
+        goto free_socks_proxy_host;
+      }
+      imap_storage->imap_proxy.socks_proxy_password = strdup(socks_proxy_password);
+      if (imap_storage->imap_proxy.socks_proxy_password == NULL) {
+        goto free_socks_proxy_user;
+      }
+    }
   }
 
   imap_storage->imap_connection_type = imap_connection_type;
@@ -197,7 +213,7 @@ int imap_mailstorage_init_sasl_with_local_address(struct mailstorage * storage,
   if (imap_command != NULL) {
     imap_storage->imap_command = strdup(imap_command);
     if (imap_storage->imap_command == NULL)
-      goto free_local_address;
+      goto free_socks_proxy_password;
   }
   else
     imap_storage->imap_command = NULL;
@@ -329,12 +345,16 @@ int imap_mailstorage_init_sasl_with_local_address(struct mailstorage * storage,
   free(imap_storage->imap_sasl.sasl_auth_type);
  free_command:
   free(imap_storage->imap_command);
+ free_socks_proxy_password:
+  free(imap_storage->imap_proxy.socks_proxy_password);
+ free_socks_proxy_user:
+  free(imap_storage->imap_proxy.socks_proxy_user);
+ free_socks_proxy_host:
+  free(imap_storage->imap_proxy.socks_proxy_host);
  free_local_address:
   free(imap_storage->imap_local_address);
  free_servername:
   free(imap_storage->imap_servername);
- free_socks_proxy_host:
-  free(imap_storage->imap_proxy.socks_proxy_host);
  free:
   free(imap_storage);
  err:
@@ -365,6 +385,8 @@ static void imap_mailstorage_uninitialize(struct mailstorage * storage)
   free(imap_storage->imap_local_address);
   free(imap_storage->imap_servername);
   free(imap_storage->imap_proxy.socks_proxy_host);
+  free(imap_storage->imap_proxy.socks_proxy_user);
+  free(imap_storage->imap_proxy.socks_proxy_password);
   free(imap_storage);
   
   storage->sto_data = NULL;
@@ -391,7 +413,9 @@ static int imap_connect(struct mailstorage * storage,
     config = &(mailstream_config) {
       .socks_proxy_enabled = imap_storage->imap_proxy.socks_proxy_enabled,
       .socks_proxy_host = imap_storage->imap_proxy.socks_proxy_host,
-      .socks_proxy_port = imap_storage->imap_proxy.socks_proxy_port
+      .socks_proxy_port = imap_storage->imap_proxy.socks_proxy_port,
+      .socks_proxy_user = imap_storage->imap_proxy.socks_proxy_user,
+      .socks_proxy_password = imap_storage->imap_proxy.socks_proxy_password
     };
   }
   

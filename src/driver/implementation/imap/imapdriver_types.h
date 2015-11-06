@@ -144,6 +144,8 @@ struct imap_mailstorage {
     int socks_proxy_enabled;
     char * socks_proxy_host;
     uint16_t socks_proxy_port;
+    char * socks_proxy_user;
+    char * socks_proxy_password;
   } imap_proxy;
 
   char * imap_local_address;

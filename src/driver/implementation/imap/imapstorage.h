@@ -85,7 +85,8 @@ int imap_mailstorage_init(struct mailstorage * storage,
     int imap_connection_type, int imap_auth_type,
     const char * imap_login, const char * imap_password,
     int imap_cached, const char * imap_cache_directory,
-    int socks_proxy_enabled, const char* socks_proxy_host, uint16_t socks_proxy_port);
+    int socks_proxy_enabled, const char* socks_proxy_host, uint16_t socks_proxy_port,
+    const char* socks_proxy_user, const char* socks_proxy_password);
 
 LIBETPAN_EXPORT
 int imap_mailstorage_init_sasl(struct mailstorage * storage,
@@ -99,7 +100,8 @@ int imap_mailstorage_init_sasl(struct mailstorage * storage,
     const char * login, const char * auth_name,
     const char * password, const char * realm,
     int imap_cached, const char * imap_cache_directory,
-    int socks_proxy_enabled, const char* socks_proxy_host, uint16_t socks_proxy_port);
+    int socks_proxy_enabled, const char* socks_proxy_host, uint16_t socks_proxy_port,
+    const char* socks_proxy_user, const char* socks_proxy_password);
 
 LIBETPAN_EXPORT
 int imap_mailstorage_init_sasl_with_local_address(struct mailstorage * storage,
@@ -114,7 +116,8 @@ int imap_mailstorage_init_sasl_with_local_address(struct mailstorage * storage,
     const char * login, const char * auth_name,
     const char * password, const char * realm,
     int imap_cached, const char * imap_cache_directory,
-    int socks_proxy_enabled, const char* socks_proxy_host, uint16_t socks_proxy_port);
+    int socks_proxy_enabled, const char* socks_proxy_host, uint16_t socks_proxy_port,
+    const char* socks_proxy_user, const char* socks_proxy_password);
 
 #ifdef __cplusplus
 }

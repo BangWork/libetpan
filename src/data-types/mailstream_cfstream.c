@@ -523,15 +523,25 @@ mailstream_low * mailstream_low_cfstream_open_voip_timeout(const char * hostname
     
     CFStringRef proxyHost = CFStringCreateWithCString(kCFAllocatorDefault, config->socks_proxy_host, kCFStringEncodingUTF8);
     CFNumberRef proxyPort = CFNumberCreate(kCFAllocatorDefault, kCFNumberSInt16Type, &config->socks_proxy_port);
-    
     CFDictionarySetValue(settings, kCFStreamPropertySOCKSProxyHost, proxyHost);
     CFDictionarySetValue(settings, kCFStreamPropertySOCKSProxyPort, proxyPort);
+    
+    CFStringRef proxyUser = NULL, proxyPassword = NULL;
+    if (config->socks_proxy_user) {
+      proxyUser = CFStringCreateWithCString(kCFAllocatorDefault, config->socks_proxy_user, kCFStringEncodingUTF8);
+      proxyPassword = CFStringCreateWithCString(kCFAllocatorDefault, config->socks_proxy_password, kCFStringEncodingUTF8);
+      CFDictionarySetValue(settings, kCFStreamPropertySOCKSUser, proxyUser);
+      CFDictionarySetValue(settings, kCFStreamPropertySOCKSPassword, proxyPassword);
+    }
+    
     CFReadStreamSetProperty(cfstream_data->readStream, kCFStreamPropertySOCKSProxy, settings);
     CFWriteStreamSetProperty(cfstream_data->writeStream, kCFStreamPropertySOCKSProxy, settings);
     
     CFRelease(settings);
-    CFRelease(proxyHost);
-    CFRelease(proxyPort);
+    if (proxyHost) CFRelease(proxyHost);
+    if (proxyPort) CFRelease(proxyPort);
+    if (proxyUser) CFRelease(proxyUser);
+    if (proxyPassword) CFRelease(proxyPassword);
   }
   
   r = low_open(s);
